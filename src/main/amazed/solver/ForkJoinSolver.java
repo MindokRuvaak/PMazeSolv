@@ -69,6 +69,21 @@ public class ForkJoinSolver
 
     private List<Integer> parallelSearch()
     {
-        return null;
+        List<Integer> res = null;
+        // res = startSearch();
+        return res;
     }
+    /* 
+     * REQUIREMENTS // from description
+     * returns path as list of integers if successfull, returns null if not
+     * nodes visited at most once
+     * must terminate, regardless of number of processors avaliable
+     * must to function with arbitrary mazes, without goals or more with more than one goal, accepting any of the goals
+     * must explore from adjacent nodes, not randomly pick and ''guess''. 
+     * must use javas fork/join parallelism 
+     * at some point must have at least two threads active at once
+     * must not contain race conditions or data races
+     * must be lock free (no semaphores, locks, or synchronized blocks)
+     */
+
 }
