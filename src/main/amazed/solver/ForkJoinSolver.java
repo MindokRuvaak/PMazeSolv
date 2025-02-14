@@ -2,12 +2,11 @@ package amazed.solver;
 
 import amazed.maze.Maze;
 
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * <code>ForkJoinSolver</code> implements a solver for
@@ -63,28 +62,117 @@ public class ForkJoinSolver
     }
 
     private List<Integer> parallelSearch() {
+        // all nodes explored no goal found, return null
         List<Integer> res = null;
 
-        // what tiles have been visited are stored in ''visited'' hashset,
-        // accessable from superclass
-
-        // if two new paths avaliable, create new thread to explore one, continue with
+        // if two new paths avaliable, create new thread to explore, continue with
         // other
+
+        // mostly copied from sequentialSolver dfs
+        int splitAt = -1;
+        List<ForkJoinSolver> branches = new ArrayList<>();
+
+        // one player active on the maze at start
+        int player = maze.newPlayer(start);
+        // start with start node
+        frontier.push(start);
+        // as long as not all nodes have been processed
+        while (!frontier.empty()) {
+            // get the new node to process
+            int current = frontier.pop();
+
+            // reached goal?
+            if (maze.hasGoal(current)) {
+                // move player to goal
+                maze.move(player, current);
+                // search finished: reconstruct and return path
+                res = pathFromTo(start, current);
+                break;
+            }
+
+            // if current node has not been visited yet
+            if (!visited.contains(current)) {
+                // move player to current node
+                maze.move(player, current);
+                // mark node as visited
+                visited.add(current);
+                // retrieve all neighbors of the current node
+                Set<Integer> nbs = maze.neighbors(current);
+                // any neighbor already visited are removed
+                nbs.removeIf((nb) -> visited.contains(nb));
+                // if nb has not been already visited,
+                // nb can be reached from current (i.e., current is nb's predecessor)
+                nbs.forEach((nb) -> predecessor.put(nb, current));
+                
+                if (nbs.isEmpty()) { // no neighbors
+                    // System.out.println("dead end");
+                } else if (nbs.size() > 1) { // fork in the road
+                    splitAt = current;
+
+                    // System.out.println(nbs.size());
+
+                    /* // add one to be visited by this thread
+                    frontier.push(nbs.iterator().next()); // should be first one
+                    
+                    // remove one visited by this thread
+                    nbs.remove(frontier.peek()); */
+                    
+                    // fork for each other unvisited neighbor
+                    for (int nb : nbs) {
+                        ForkJoinSolver branch = new ForkJoinSolver(this.maze);
+                        // new fork starts at this neighbor
+                        branch.start = nb;
+                        // copy over the visited nodes
+                        branch.visited.addAll(this.visited);
+                        // and the predecessors
+                        branch.predecessor.putAll(this.predecessor);
+                        // add this branch to list of branches coming off of this main
+                        branches.add(branch);
+
+                        branch.fork();
+                        // List<Integer> branchRes = branch.join();
+                        // if (branchRes != null) {// if branch not result in null
+                        //     // System.out.println("branch found goal");
+                        //     res = pathFromTo(start, current);
+                        //     res.addAll(branchRes);
+                        //     break;
+                        // }
+                    }
+                } else { // only one path, continue with this thread
+                    frontier.push(nbs.iterator().next()); // ''first'' element in nbs
+                }
+            }
+        }
+        // invokeAll(branches);
+
+        // List<List<Integer>> brRes = new ArrayList<>();
+        // branches.forEach(br -> brRes.add(br.join()));
+        // brRes.removeIf(r -> r == null);
+        // System.out.println(brRes);
+
+        for (ForkJoinSolver branch : branches) {
+            List<Integer> branchRes = branch.join();
+            if (branchRes != null) {// if branch not result in null
+                // System.out.println("branch found goal");
+                res = pathFromTo(start, splitAt);
+                res.addAll(branchRes);
+                break;
+            }
+        }
 
         return res;
     }
     /*
      *** REQUIREMENTS // from description
-     ** returns path as list of integers if successfull, if not returns null.
+     * * returns path as list of integers (id) if successfull, if not returns null.
      * nodes visited at most once
-     ** must terminate, regardless of number of processors avaliable
-     ** must to function with arbitrary mazes, without goals or more with more than
-     ** one goal, accepting any of the goals
-     ** must explore from adjacent nodes, not randomly pick and ''guess''.
-     ** must use javas fork/join parallelism
-     ** at some point must have at least two threads active at once
-     ** must not contain race conditions or data races
-     ** must be lock free (no semaphores, locks, or synchronized blocks)
+     * * must terminate, regardless of number of processors avaliable
+     * * must to function with arbitrary mazes, without goals or more with more than
+     * one goal, accepting any of the goals
+     * * must explore from adjacent nodes, not randomly pick and ''guess''.
+     * * must use javas fork/join parallelism
+     * * at some point must have at least two threads active at once
+     * * must not contain race conditions or data races
+     * * must be lock free (no semaphores, locks, or synchronized blocks)
      */
-
 }
