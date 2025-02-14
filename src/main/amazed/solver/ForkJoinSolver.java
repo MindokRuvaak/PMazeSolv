@@ -1,12 +1,9 @@
 package amazed.solver;
 
 import amazed.maze.Maze;
-
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * <code>ForkJoinSolver</code> implements a solver for
@@ -103,20 +100,12 @@ public class ForkJoinSolver
                 // if nb has not been already visited,
                 // nb can be reached from current (i.e., current is nb's predecessor)
                 nbs.forEach((nb) -> predecessor.put(nb, current));
-                
+
                 if (nbs.isEmpty()) { // no neighbors
                     // System.out.println("dead end");
                 } else if (nbs.size() > 1) { // fork in the road
                     splitAt = current;
 
-                    // System.out.println(nbs.size());
-
-                    /* // add one to be visited by this thread
-                    frontier.push(nbs.iterator().next()); // should be first one
-                    
-                    // remove one visited by this thread
-                    nbs.remove(frontier.peek()); */
-                    
                     // fork for each other unvisited neighbor
                     for (int nb : nbs) {
                         ForkJoinSolver branch = new ForkJoinSolver(this.maze);
@@ -130,36 +119,21 @@ public class ForkJoinSolver
                         branches.add(branch);
 
                         branch.fork();
-                        // List<Integer> branchRes = branch.join();
-                        // if (branchRes != null) {// if branch not result in null
-                        //     // System.out.println("branch found goal");
-                        //     res = pathFromTo(start, current);
-                        //     res.addAll(branchRes);
-                        //     break;
-                        // }
                     }
                 } else { // only one path, continue with this thread
                     frontier.push(nbs.iterator().next()); // ''first'' element in nbs
                 }
             }
         }
-        // invokeAll(branches);
-
-        // List<List<Integer>> brRes = new ArrayList<>();
-        // branches.forEach(br -> brRes.add(br.join()));
-        // brRes.removeIf(r -> r == null);
-        // System.out.println(brRes);
 
         for (ForkJoinSolver branch : branches) {
             List<Integer> branchRes = branch.join();
             if (branchRes != null) {// if branch not result in null
-                // System.out.println("branch found goal");
                 res = pathFromTo(start, splitAt);
                 res.addAll(branchRes);
                 break;
             }
         }
-
         return res;
     }
     /*
