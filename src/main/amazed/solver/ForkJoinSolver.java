@@ -111,9 +111,10 @@ public class ForkJoinSolver
                         ForkJoinSolver branch = new ForkJoinSolver(this.maze);
                         // new fork starts at this neighbor
                         branch.start = nb;
-                        // copy over the visited nodes
-                        branch.visited.addAll(this.visited);
-                        // and the predecessors
+                        // same set of visited tiles, if ANY branch have visited a tile then no branch
+                        // should visit it
+                        branch.visited = this.visited;
+                        // copy over the predecessors
                         branch.predecessor.putAll(this.predecessor);
                         // add this branch to list of branches coming off of this main
                         branches.add(branch);
