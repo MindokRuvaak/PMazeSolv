@@ -61,6 +61,8 @@ public class ForkJoinSolver
     private List<Integer> parallelSearch() {
         // all nodes explored no goal found, return null
         List<Integer> res = null;
+        visited.size();
+        
 
         // if two new paths avaliable, create new thread to explore, continue with
         // other
