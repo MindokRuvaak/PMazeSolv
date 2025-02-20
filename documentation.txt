@@ -1,0 +1,20 @@
+DOCUMENTATION TEXT (summary of logic):
+The solution uses the DFS (depth first search) to a fork/join approach.
+We start by placing the maze's initial node on a frontier stack whereas as we progress through
+the maze, the algorithm will find multiple unvisited node "crossings" and will thereby spawn
+new tasks (forsk) to explore the these neighbours using parallellism.
+The new tasks inherit the current solver's own state (the visited set and current/predecssors map)
+and will make it so that the no previously visited node is explored again in the same branch.
+Each fork / subtask continous a own DFS operation then independenty. 
+If we reach the coal it reassembles the partial path to the goail and returns this back to the "parent".
+The parent task then will merge with the new partial parth with it's own segment to produce our path from
+initial start node to goal.
+In the single neighbour case we will not fork any new forks, in which the exploration continous in the current
+thread. And if the algrorithm is exhausted with not finding the goal it will in this case return a null.
+It in short only travels along valid nodes and edges, visits the nodes at most once per branch and ensures a 
+parallel exploration where the multiple neighbours exists.
+
+Also, we avoid the explicit locks or semaphores by either copying or using thread-safe structures and therefore 
+preventing race conditions.
+The synchronizations occurs via the fork/join framewokr/library with fork() and join() methods.This makes sure the
+solution doesn't have any locks, and using concurrency whenever the branching of the maze is large.
