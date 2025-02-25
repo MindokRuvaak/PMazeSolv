@@ -89,13 +89,13 @@ public class ForkJoinSolver
                 break;
             }
 
-            // if current node has not been visited yet
-            if (!visited.contains(current)) {
+            // if current node has not been visited yet,
+            //changed to .add(current) in orer to NOT have been visited by any other thread yet.
+           //should prevent two threads from processing the same node?
+            if (!visited.add(current)) {
                 // move player to current node
                 maze.move(player, current);
                 // mark node as visited
-                visited.add(current);
-                // retrieve all neighbors of the current node
                 Set<Integer> nbs = maze.neighbors(current);
                 // any neighbor already visited are removed
                 nbs.removeIf((nb) -> visited.contains(nb));
