@@ -24,7 +24,11 @@ public class ForkJoinSolver
      *
      * @param maze the maze to be searched
      */
-    
+    //TODO, added these seemingly thread-safe data structures based on e-mail.
+    public Set<Integer> visited = new ConcurrentSkipListSet<>(); //fr TA.
+    public ConcurrentMap<Integer, Integer> predecessor = new ConcurrentHashMap<>(); //from demo.
+    public Deque<Integer> frontier = new ConcurrentLinkedDeque<>(); //from demo.
+ 
     public ForkJoinSolver(Maze maze) {
         super(maze);
     }
