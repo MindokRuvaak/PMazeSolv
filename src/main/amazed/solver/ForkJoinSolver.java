@@ -2,8 +2,10 @@ package amazed.solver;
 
 import amazed.maze.Maze;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.*;
 
 /**
  * <code>ForkJoinSolver</code> implements a solver for
@@ -22,6 +24,7 @@ public class ForkJoinSolver
      *
      * @param maze the maze to be searched
      */
+    
     public ForkJoinSolver(Maze maze) {
         super(maze);
     }
@@ -76,7 +79,7 @@ public class ForkJoinSolver
         // start with start node
         frontier.push(start);
         // as long as not all nodes have been processed
-        while (!frontier.empty()) {
+        while (!frontier.isEmpty()) {
             // get the new node to process
             int current = frontier.pop();
 
@@ -92,7 +95,7 @@ public class ForkJoinSolver
             // if current node has not been visited yet,
             //changed to .add(current) in orer to NOT have been visited by any other thread yet.
            //should prevent two threads from processing the same node?
-            if (!visited.add(current)) {
+            if (visited.add(current)) {
                 // move player to current node
                 maze.move(player, current);
                 // mark node as visited
