@@ -125,8 +125,13 @@ public class ForkJoinSolver
                         // same set of visited tiles, if ANY branch have visited a tile then no branch
                         // should visit it
                         branch.visited = this.visited;
+
                         // copy over the predecessors
                         // branch.predecessor.putAll(this.predecessor);
+                        // tested and this is not actually needed to copy over, the old predecessors
+                        // won't be used since the branch's pathFromTo will consider it's own start not
+                        // it's parents. then combine the result with the parents path after joinning
+
                         // add this branch to list of branches coming off of this main
                         branches.add(branch);
 
@@ -150,7 +155,7 @@ public class ForkJoinSolver
     }
 
     // since a new predecessor is used this method needs to be redefined so that it
-    // is not the predecessor in the super-class that is used. 
+    // is not the predecessor in the super-class that is used.
     @Override
     protected List<Integer> pathFromTo(int from, int to) {
         List<Integer> path = new LinkedList<>();
