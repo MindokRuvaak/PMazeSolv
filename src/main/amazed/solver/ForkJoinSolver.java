@@ -61,7 +61,6 @@ public class ForkJoinSolver
     private List<Integer> parallelSearch() {
         // all nodes explored no goal found, return null
         List<Integer> res = null;
-        
 
         // if two new paths avaliable, create new threads to explore each
 
@@ -87,8 +86,9 @@ public class ForkJoinSolver
                 break;
             }
 
-            // if current node has not been visited yet
-            if (!visited.contains(current)) {
+            // if current not in visited, *add* will sucessfully add current to visited nodes
+            // and return true
+            if (visited.add(current)) {
                 // move player to current node
                 maze.move(player, current);
                 // mark node as visited
@@ -102,7 +102,7 @@ public class ForkJoinSolver
                 nbs.forEach((nb) -> predecessor.put(nb, current));
 
                 if (nbs.isEmpty()) { // no neighbors
-                    
+
                 } else if (nbs.size() > 1) { // fork in the road
                     splitAt = current;
 
