@@ -2,8 +2,12 @@ package amazed.solver;
 
 import amazed.maze.Maze;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.*;
 
 /**
  * <code>ForkJoinSolver</code> implements a solver for
@@ -22,6 +26,11 @@ public class ForkJoinSolver
      *
      * @param maze the maze to be searched
      */
+    // TODO, added these seemingly thread-safe data structures based on e-mail.
+    public Set<Integer> visited = new ConcurrentSkipListSet<>(); // fr TA.
+    public ConcurrentMap<Integer, Integer> predecessor = new ConcurrentHashMap<>(); // from demo.
+    public Deque<Integer> frontier = new ConcurrentLinkedDeque<>(); // from demo.
+
     public ForkJoinSolver(Maze maze) {
         super(maze);
     }
@@ -73,7 +82,7 @@ public class ForkJoinSolver
         // start with start node
         frontier.push(start);
         // as long as not all nodes have been processed
-        while (!frontier.empty()) {
+        while (!frontier.isEmpty()) {
             // get the new node to process
             int current = frontier.pop();
 
@@ -86,14 +95,16 @@ public class ForkJoinSolver
                 break;
             }
 
-            // if current not in visited, *add* will sucessfully add current to visited nodes
-            // and return true
+            // if current node has not been visited yet,
+            // changed to .add(current) in orer to NOT have been visited by any other thread
+            // yet.
+            // should prevent two threads from processing the same node?
+            // ^^ prevents race condition where two treads try to visit the same node before
+            // one of them marking node as visited
             if (visited.add(current)) {
                 // move player to current node
                 maze.move(player, current);
                 // mark node as visited
-                visited.add(current);
-                // retrieve all neighbors of the current node
                 Set<Integer> nbs = maze.neighbors(current);
                 // any neighbor already visited are removed
                 nbs.removeIf((nb) -> visited.contains(nb));
@@ -115,7 +126,7 @@ public class ForkJoinSolver
                         // should visit it
                         branch.visited = this.visited;
                         // copy over the predecessors
-                        branch.predecessor.putAll(this.predecessor);
+                        // branch.predecessor.putAll(this.predecessor);
                         // add this branch to list of branches coming off of this main
                         branches.add(branch);
 
@@ -136,6 +147,23 @@ public class ForkJoinSolver
             }
         }
         return res;
+    }
+
+    // since a new predecessor is used this method needs to be redefined so that it
+    // is not the predecessor in the super-class that is used. 
+    @Override
+    protected List<Integer> pathFromTo(int from, int to) {
+        List<Integer> path = new LinkedList<>();
+        Integer current = to;
+        while (current != from) {
+            path.add(current);
+            current = predecessor.get(current);
+            if (current == null)
+                return null;
+        }
+        path.add(from);
+        Collections.reverse(path);
+        return path;
     }
     /*
      *** REQUIREMENTS // from description
