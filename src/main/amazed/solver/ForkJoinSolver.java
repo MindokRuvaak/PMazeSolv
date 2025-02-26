@@ -61,14 +61,12 @@ public class ForkJoinSolver
     private List<Integer> parallelSearch() {
         // all nodes explored no goal found, return null
         List<Integer> res = null;
-        visited.size();
         
 
-        // if two new paths avaliable, create new thread to explore, continue with
-        // other
+        // if two new paths avaliable, create new threads to explore each
 
         // mostly copied from sequentialSolver dfs
-        int splitAt = -1;
+        int splitAt = start;
         List<ForkJoinSolver> branches = new ArrayList<>();
 
         // one player active on the maze at start
@@ -104,7 +102,7 @@ public class ForkJoinSolver
                 nbs.forEach((nb) -> predecessor.put(nb, current));
 
                 if (nbs.isEmpty()) { // no neighbors
-                    // System.out.println("dead end");
+                    
                 } else if (nbs.size() > 1) { // fork in the road
                     splitAt = current;
 
